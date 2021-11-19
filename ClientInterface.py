@@ -1,5 +1,6 @@
+
 import PySimpleGUI as pg
-from random import choice
+
 
 colors = ["#F04D0B", "#96F109", "#09EDF1", "#F109F1", "#F10909"]
 
@@ -8,30 +9,22 @@ class MainWindow:
     def __init__(self, pg: pg) -> None:
         self.pg = pg
         self.__window = None
-        self.__messages_counter = 0
 
     def create_window(self):
         layout = [
-            [self.pg.Text(k="text0")],
-            [self.pg.Text(k="text1")],
-            [self.pg.Text(k="text2")],
-            [self.pg.Text(k="text3")],
-            [self.pg.Text(k="text4")],
-            [self.pg.Text(k="text5")],
-            [self.pg.Text()],
-            [self.pg.Text()],
-            [self.pg.InputText(k="message", size=5, font=5), self.pg.Button("Send", bind_return_key="Enter", font=5)]
+            [self.pg.Text("Main Chat"),
+             self.pg.Text("Users", justification="right", pad=((275, 0), (0, 0)))],
+            [self.pg.Multiline(k="multi", disabled=True, size=(45, 27)),
+             self.pg.Listbox(values=["name1", "name2", "name3"], size=(20, 25))],
+            [self.pg.InputText(k="message", size=(37, 30), font=20, expand_y=True, ),
+             self.pg.Button("Send", bind_return_key=True, font=10, size=(30, 30))]
         ]
-        window = pg.Window("Chat v1.0", layout, size=(500, 500))
+        window = pg.Window("Chat v1.0", layout, size=(500, 550))
         return window
 
     def update_Text(self, message: str):
-        if self.__messages_counter == 5:
-            self.__messages_counter = 0
-        counter = self.__messages_counter
-        self.__window[f"text{counter}"].update(f"\n{message}", background_color=choice(colors))
+        self.__window["multi"].print(message)
         self.__window["message"].update("")
-        self.__messages_counter += 1
 
     def main(self):
         self.__window = self.create_window()
