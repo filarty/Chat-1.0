@@ -1,14 +1,28 @@
 
+from threading import Thread
 import PySimpleGUI as pg
+import socket
+from JsonProtocol import Protocol
 
-
-colors = ["#F04D0B", "#96F109", "#09EDF1", "#F109F1", "#F10909"]
-
-
-class MainWindow:
+class Client:
     def __init__(self, pg: pg) -> None:
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.pg = pg
         self.__window = None
+
+    def connected(self, ip: str, port: int) -> None:
+        self.sock.connect((ip, port))
+        self.main_window()
+
+    def send_message(self, message: str):
+        protocol_json = Protocol.message("filarty", message)
+        self.sock.send(protocol_json.encode())
+
+    def get_message(self):
+        while True:
+            message = self.sock.recv(2024)
+            self.update_Text(Protocol.decode_json(message))
+
 
     def create_window(self):
         layout = [
@@ -22,21 +36,26 @@ class MainWindow:
         window = pg.Window("Chat v1.0", layout, size=(500, 550))
         return window
 
-    def update_Text(self, message: str):
-        self.__window["multi"].print(message)
-        self.__window["message"].update("")
+    def update_Text(self, message):
+        result = message[0]['send']
+        self.__window["multi"].print(f"{result['user']} -> {result['message']}")
 
-    def main(self):
+    def main_window(self):
+        t = Thread(target=self.get_message, daemon=True)
+        t.start()
         self.__window = self.create_window()
         while True:
             event, count = self.__window.read(timeout=1000)
             if event == pg.WIN_CLOSED:
                 break
             if event == "Send":
-                self.update_Text(count["message"])
+                self.__window["message"].update("")
+                self.send_message(count["message"])
+        self.sock.close()
+        self.event = True
         self.__window.close()
 
 
 if __name__ == "__main__":
-    window = MainWindow(pg)
-    window.main()
+    client = Client(pg)
+    client.connected("localhost", 54007)
