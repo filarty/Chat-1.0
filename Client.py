@@ -1,6 +1,6 @@
 import socket
 import asyncio
-
+from JsonProtocol import Protocol
 
 class Client:
     def __init__(self) -> None:
@@ -14,7 +14,8 @@ class Client:
     async def send_message(self):
         while True:
             message = await self.loop.run_in_executor(None, input, "send message: ")
-            await self.loop.sock_sendall(self.sock, message.encode())
+            protocol_json = Protocol.message("filarty", message)
+            await self.loop.sock_sendall(self.sock, protocol_json.encode())
 
     async def get_message(self):
         while True:
@@ -27,4 +28,4 @@ class Client:
 
 if __name__ == "__main__":
     client = Client()
-    client.connected("localhost", 52007)
+    client.connected("localhost", 54007)
